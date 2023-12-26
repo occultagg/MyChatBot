@@ -28,7 +28,7 @@ def get_weather(api_key, city_name):
                 daytemp = tmr_weather['daytemp']
                 daywind = tmr_weather['daywind']
                 daypower = tmr_weather['daypower']
-                return f"晚上好, 明天是{date}, 周{week}.{city}明天白天天气: {dayweather},气温: {daytemp}摄氏度,吹{daywind}风,风力{daypower}级.么么哒♥"
+                return f"晚上好, 明天是{date}, 周{week}.{city}明天白天天气: {dayweather},气温: {daytemp}摄氏度,吹{daywind}风,风力{daypower}级.么么哒."
         else:
             return f"Error: {data['message']}"
 
