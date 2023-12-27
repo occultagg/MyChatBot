@@ -28,7 +28,7 @@ def get_weather(api_key, city_name):
                 daytemp = tmr_weather['daytemp']
                 daywind = tmr_weather['daywind']
                 daypower = tmr_weather['daypower']
-                return f"晚上好, 明天是{date}, 周{week}.{city}明天白天天气: {dayweather},气温: {daytemp}摄氏度,吹{daywind}风,风力{daypower}级.么么哒."
+                return f"晚上好, 明天是{date}, 周{week}.{city}明天白天天气: {dayweather},气温: {daytemp}摄氏度,吹{daywind}风,风力{daypower}级.么么哒♥."
         else:
             return f"Error: {data['message']}"
 
@@ -62,6 +62,7 @@ if __name__ == '__main__':
     shunde_weather = get_weather(api_key, 'Shunde')
     job1 = schedule.every().day.at("20:15").do(send_msg, liwan_weather, 'Sharon')
     job2 = schedule.every().day.at("20:15").do(send_msg, shunde_weather, 'Peter')
+    job3 = schedule.every().day.at("14:00").do(send_msg, shunde_weather, 'AI潘炜健', True)
 
     while True:
         schedule.run_pending()
@@ -72,4 +73,7 @@ if __name__ == '__main__':
             print(f"Result of last run: {task_result}")
         if job2.last_run is not None and job2.last_run.day != schedule.next_run.day:
             task_result = job2.result
+            print(f"Result of last run: {task_result}")
+        if job3.last_run is not None and job3.last_run.day != schedule.next_run.day:
+            task_result = job3.result
             print(f"Result of last run: {task_result}")
