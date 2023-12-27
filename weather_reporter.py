@@ -60,8 +60,8 @@ api_key = os.getenv('GAODE_API_KEY')
 if __name__ == '__main__':
     liwan_weather = get_weather(api_key, 'Liwan')
     shunde_weather = get_weather(api_key, 'Shunde')
-    job1 = schedule.every().day.at("23:00").do(send_msg, liwan_weather, 'Sharon')
-    job2 = schedule.every().day.at("23:00").do(send_msg, shunde_weather, 'Peter')
+    job1 = schedule.every().day.at("20:15").do(send_msg, liwan_weather, 'Sharon')
+    job2 = schedule.every().day.at("20:15").do(send_msg, shunde_weather, 'Peter')
 
     while True:
         schedule.run_pending()
