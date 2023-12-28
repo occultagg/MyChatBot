@@ -41,7 +41,7 @@ def get_tmr_weather(api_key, city_id, locate):
             day_wind_scale = tmr_weather["windScaleDay"]
             humidity = tmr_weather["humidity"]
             print(f"天气信息获取成功:{data}")
-            return f"晚上好!明天{date},{locate}白天{day_weather},最高温{tem_max}摄氏度,最低温{tem_min}摄氏度.吹{day_wind_scale}级的{day_wind_dir}.相对湿度{humidity}%.\n么么哒~"
+            return f"晚上好!明天{date},{locate}白天{day_weather},最高温{tem_max}℃,最低温{tem_min}℃.吹{day_wind_scale}级的{day_wind_dir}.相对湿度{humidity}%.\n♥么么哒♥"
         else:
             return "Error: 天气预报获取失败."
 
@@ -77,9 +77,9 @@ def reporter(location, api_key, to_who, is_room=False):
 
 if __name__ == '__main__':
     api_key = os.getenv('HEFENG_API_KEY')
-    schedule.every().day.at("20:00").do(reporter, "shunde", api_key, "Peter")
     schedule.every().day.at("20:00").do(reporter, "liwan", api_key, "Sharon")
-    schedule.every().thursday.at("08:00").do(reporter, "tianhe", api_key, "AI潘炜健", True)
+    schedule.every().day.at("20:00").do(reporter, "shunde", api_key, "甘蔗种植技术交流群", True)
+    schedule.every().thursday.at("20:00").do(reporter, "tianhe", api_key, "AI潘炜健", True)
     while True:
         schedule.run_pending()
         time.sleep(1)
