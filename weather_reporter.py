@@ -14,14 +14,14 @@ def get_location_id(location, api_key):
         data = response.json()
         print(data)
         if len(data["location"]) == 1:
-            return data["location"][0]["id"]
+            return data["location"][0]["id"], data["location"][0]["name"]
         else:
             return f"搜索到多于1个location,请检查."
     else:
         print(f"localtion ID请求失败，状态码: {response.status_code}")
         return response.text
 
-def get_tmr_weather(api_key, city_id):
+def get_tmr_weather(api_key, city_id, locate):
     base_url = "https://devapi.qweather.com/v7/weather/3d"
     params = {
         'key': api_key,
@@ -33,7 +33,6 @@ def get_tmr_weather(api_key, city_id):
         data = response.json()
         if response.ok:
             tmr_weather = data["daily"][1]
-            locate = tmr_weather["name"]
             date = tmr_weather["fxDate"]
             day_weather = tmr_weather["textDay"]
             tem_max = tmr_weather["tempMax"]
@@ -42,7 +41,7 @@ def get_tmr_weather(api_key, city_id):
             day_wind_scale = tmr_weather["windScaleDay"]
             humidity = tmr_weather["humidity"]
             print(f"天气信息获取成功:{data}")
-            return f"晚上好!明天{date},{locate}白天{day_weather},最高温{tem_max}摄氏度,最低温{tem_min}摄氏度.吹{day_wind_scale}级的{day_wind_dir}.相对湿度{humidity}%.么么哒~"
+            return f"晚上好!明天{date},{locate}白天{day_weather},最高温{tem_max}摄氏度,最低温{tem_min}摄氏度.吹{day_wind_scale}级的{day_wind_dir}.相对湿度{humidity}%.\n么么哒~"
         else:
             return "Error: 天气预报获取失败."
 
@@ -50,8 +49,8 @@ def get_tmr_weather(api_key, city_id):
         return f"An error occurred: {e}"
     
 def send_msg(msg, to_who, is_room=False):
-    base_url = 'http://localhost:3001/webhook/msg'
     timeout = 2
+    base_url = 'http://localhost:3001/webhook/msg'
     headers = {'Content-Type': 'application/json'}
     body = {
         'to': to_who,
@@ -65,23 +64,24 @@ def send_msg(msg, to_who, is_room=False):
         data = response.json()
         return data
     except requests.Timeout:
-        return "request timeout"
+        return f"Request Timeout."
     except Exception as e:
         return f"An error occurred: {e}"
     
 def reporter(location, api_key, to_who, is_room=False):
-    id = get_location_id(location, api_key)
+    id, locate = get_location_id(location, api_key)
     print(f"city_id:{id}")
-    tmr_weather = get_tmr_weather(api_key, id)
+    tmr_weather = get_tmr_weather(api_key, id, locate)
     reporter_result = send_msg(tmr_weather, to_who, is_room)
-    return reporter_result
+    print(reporter_result)
 
 if __name__ == '__main__':
     api_key = os.getenv('HEFENG_API_KEY')
     schedule.every().day.at("20:00").do(reporter, "shunde", api_key, "Peter")
     schedule.every().day.at("20:00").do(reporter, "liwan", api_key, "Sharon")
-    schedule.every().day.at("09:30").do(reporter, "tianhe", api_key, "AI潘炜健", is_room=True)
+    schedule.every().thursday.at("08:00").do(reporter, "tianhe", api_key, "AI潘炜健", True)
     while True:
         schedule.run_pending()
         time.sleep(1)
+
 
