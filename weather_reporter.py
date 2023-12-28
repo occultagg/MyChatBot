@@ -4,33 +4,47 @@ import schedule
 import time
 import os
 
-def get_weather(api_key, city_name):
-    base_url = "https://restapi.amap.com/v3/weather/weatherInfo"
-    city_code = {'Shunde': '440606', 'Liwan': '440103', 'Tianhe': '440106'}
+def get_location_id(location, api_key):
+    url = 'https://geoapi.qweather.com/v2/city/lookup'
+    params = {"location": location, "key": api_key}
+
+    response = requests.get(url, params=params)
+
+    if response.ok:
+        data = response.json()
+        print(data)
+        if len(data["location"]) == 1:
+            return data["location"][0]["id"]
+        else:
+            return f"搜索到多于1个location,请检查."
+    else:
+        print(f"localtion ID请求失败，状态码: {response.status_code}")
+        return response.text
+
+def get_tmr_weather(api_key, city_id):
+    base_url = "https://devapi.qweather.com/v7/weather/3d"
     params = {
         'key': api_key,
-        'city': city_code[city_name],
-        'extensions': 'all',
-        'output': 'JSON'
+        'location': city_id
     }
 
     try:
         response = requests.get(base_url, params=params)
         data = response.json()
-
-        if response.status_code == 200:
-            if data['status'] == '1':
-                city = data['forecasts'][0]['city']
-                tmr_weather = data['forecasts'][0]['casts'][1]
-                date = tmr_weather['date']
-                week = tmr_weather['week']
-                dayweather = tmr_weather['dayweather']
-                daytemp = tmr_weather['daytemp']
-                daywind = tmr_weather['daywind']
-                daypower = tmr_weather['daypower']
-                return f"晚上好, 明天是{date}, 周{week}.{city}明天白天天气: {dayweather},气温: {daytemp}摄氏度,吹{daywind}风,风力{daypower}级.么么哒♥."
+        if response.ok:
+            tmr_weather = data["daily"][1]
+            locate = tmr_weather["name"]
+            date = tmr_weather["fxDate"]
+            day_weather = tmr_weather["textDay"]
+            tem_max = tmr_weather["tempMax"]
+            tem_min = tmr_weather["tempMin"]
+            day_wind_dir = tmr_weather["windDirDay"]
+            day_wind_scale = tmr_weather["windScaleDay"]
+            humidity = tmr_weather["humidity"]
+            print(f"天气信息获取成功:{data}")
+            return f"晚上好!明天{date},{locate}白天{day_weather},最高温{tem_max}摄氏度,最低温{tem_min}摄氏度.吹{day_wind_scale}级的{day_wind_dir}.相对湿度{humidity}%.么么哒~"
         else:
-            return f"Error: {data['message']}"
+            return "Error: 天气预报获取失败."
 
     except Exception as e:
         return f"An error occurred: {e}"
@@ -54,26 +68,20 @@ def send_msg(msg, to_who, is_room=False):
         return "request timeout"
     except Exception as e:
         return f"An error occurred: {e}"
-
-api_key = os.getenv('GAODE_API_KEY')
+    
+def reporter(location, api_key, to_who, is_room=False):
+    id = get_location_id(location, api_key)
+    print(f"city_id:{id}")
+    tmr_weather = get_tmr_weather(api_key, id)
+    reporter_result = send_msg(tmr_weather, to_who, is_room)
+    return reporter_result
 
 if __name__ == '__main__':
-    liwan_weather = get_weather(api_key, 'Liwan')
-    shunde_weather = get_weather(api_key, 'Shunde')
-    job1 = schedule.every().day.at("20:15").do(send_msg, liwan_weather, 'Sharon')
-    job2 = schedule.every().day.at("20:15").do(send_msg, shunde_weather, 'Peter')
-    job3 = schedule.every().day.at("14:00").do(send_msg, shunde_weather, 'AI潘炜健', True)
-
+    api_key = os.getenv('HEFENG_API_KEY')
+    schedule.every().day.at("20:00").do(reporter, "shunde", api_key, "Peter")
+    schedule.every().day.at("20:00").do(reporter, "liwan", api_key, "Sharon")
+    schedule.every().day.at("09:30").do(reporter, "tianhe", api_key, "AI潘炜健", is_room=True)
     while True:
         schedule.run_pending()
         time.sleep(1)
 
-        if job1.last_run is not None and job1.last_run.day != schedule.next_run.day:
-            task_result = job1.result
-            print(f"Result of last run: {task_result}")
-        if job2.last_run is not None and job2.last_run.day != schedule.next_run.day:
-            task_result = job2.result
-            print(f"Result of last run: {task_result}")
-        if job3.last_run is not None and job3.last_run.day != schedule.next_run.day:
-            task_result = job3.result
-            print(f"Result of last run: {task_result}")
